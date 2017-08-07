@@ -100,7 +100,7 @@ def doorOpensHandler(evt)
 //		Trigger Alarm in thedelay seconds by opening the virtual sensor.
 //		Do not delay alarm when additional triggers occur by using overwrite: false
 //		runIn(thedelay, soundalarm, [data: [lastupdt: lastupdt], overwrite: false])
-	      def now = new Date()
+		def now = new Date()
 		def runTime = new Date(now.getTime() + (thedelay * 1000))
 		runOnce(runTime, soundalarm, [data: [lastupdt: lastupdt], overwrite: false]) 
 		}
