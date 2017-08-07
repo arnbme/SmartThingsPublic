@@ -13,7 +13,7 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
- *	Aug 05, 2017 v1.0.1b change seconds from 60 to 55 on first short delay eliminating a 5 second runIn
+ *	Aug 05, 2017 v1.0.1b change seconds from 60 to thedelay*60-5 on first short delay eliminating a 5 second runIn
  *	Aug 03, 2017 v1.0.1a Remove extraneous unschedule() from contactOpenHandler.
  *	Aug 02, 2017 v1.0.1  Add logic in checkStatus ignoring instusions (handled by dooropens) as much as possible.
  *	Jul 31, 2017 v1.0.0  Coded and Installed
@@ -120,9 +120,9 @@ def checkStatus()
 			{
 			log.debug ("waiting for delay to elapse before first message")
 			if (door_elapsed < alarm_elapsed)
-				runIn(60 - door_elapsed,checkStatus)
+				runIn(thedelay * 60 - door_elapsed,checkStatus)
 			else
-				runIn(60 - alarm_elapsed,checkStatus)
+				runIn(thedelay * 60 - alarm_elapsed,checkStatus)
 			}
 		else
 			{
