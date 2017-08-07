@@ -12,6 +12,8 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *  Aug 07, 2017 v1.0.3 Due to reports of RunIn being unreliable, change to RunOnce
+ *
  *  Aug 04, 2017 v1.0.2 Change keypad to an optional device. limit time delay range: 10 to 60 seconds
  *						Rename to Smart Home Delay from Front Door Opens, 
  * 						allow for multiple: contact sensors, sirens, and keypads
@@ -97,7 +99,10 @@ def doorOpensHandler(evt)
 
 //		Trigger Alarm in thedelay seconds by opening the virtual sensor.
 //		Do not delay alarm when additional triggers occur by using overwrite: false
-		runIn(thedelay, soundalarm, [data: [lastupdt: lastupdt], overwrite: false])
+//		runIn(thedelay, soundalarm, [data: [lastupdt: lastupdt], overwrite: false])
+	      def now = new Date()
+		def runTime = new Date(now.getTime() + (thedelay * 1000))
+		runOnce(runTime, soundalarm, [data: [lastupdt: lastupdt], overwrite: false]) 
 		}
 	}
 
