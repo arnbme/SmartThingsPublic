@@ -1,123 +1,34 @@
-/**
- *  Smart Home Delay
- *
- *  Copyright 2017 Arn Burkhoff
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
- *  in compliance with the License. You may obtain a copy of the License at:
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
- *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
- *  for the specific language governing permissions and limitations under the License.
- *
- *  Aug 04, 2017 v1.0.2 Change keypad to an optional device. limit time delay range: 10 to 60 seconds
- *						Rename to Smart Home Delay from Front Door Opens, 
- * 						allow for multiple: contact sensors, sirens, and keypads
- *						add unschedule in case there are multiple triggers
- *
- *  Aug 02, 2017 v1.0.1 Change to use alarm system state timing vs keypad lastupdate
- *					Eliminates requirement for keypad, mods to keypad DTH, although I continue using the Mods
- *
- *  Jul 30, 2017 v1.0.0 initial version. Perform Entry Delay missing in SmartHome.
- *					Requires modified version of Mitch Pond's Centralite Keypad DTH adding
- * 					seconds to time field, and also not updating lastUpdate when doing entryDelay.
- * 
- *  This SmartApp creates a (simulated) entry delay missing in SmartHome
- *  Although the app can handle multiple contact sensors per instance, you may prefer to create an instance of 
- *  this app per contact sensor, allowing for: varying entry timings; and using a separate simulated contact sensor 
- *  to make sense of any intrusion messages from SmartHome
- */
-definition(
-    name: "Smart Home Delay",
-    namespace: "arnbme",
-    author: "Arn Burkhoff",
-    description: "SmartApp simulating missing entry delay option in SmartHome",
-    category: "My Apps",
-    iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png",
-    iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png",
-    iconX3Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png")
+<a name="ReadMeAnchor"></a>
+<h1>Welcome to Arn Burkhoff's SmartThings Repository</h1>
 
+Below you will find a list of the SmartApps that I've created.  I've included a short description of what they can do and included links to their topics in the SmartThings forum.
 
-preferences
-	{
-    section("Smart Home Delay Parameters") {
-        input "thecontact", "capability.contactSensor", required: true, multiple: true,
-        	title: "One or more Monitored Contact Sensors, do not monitor in Smarthome"
-        input "thesimcontact", "capability.contactSensor", required: true,
-        	title: "Simulated Contact Sensor, monitored by SmartHome"
-        input "thedelay", "number", required: true, range: "10..60", default: "25",
-        	title: "Alarm delay time in seconds from 10 to 60"
-        input "thekeypad", "capability.button", required: false, multiple: true,
-        	title: "Zero or more Optional Keypads: sounds entry delay tone "
-        input "thesiren", "capability.alarm", required: false, multiple: true,
-        	title: "Zero or more Optional Sirens to Beep"
-    	}
-	}
+<hr />
 
-def installed() {
-	log.debug "Installed with settings: ${settings}"
-	initialize()
-}
+<ul>
+	<li><p><a href="#smartapps">SmartApps</a></p>
+		<ul>
+			<li><a href="#home-presence-manager">Smart Home Delay</a></li>
+			<li><a href="#simple-device-viewer">Door Monitor</a></li>
+		</ul>
+	</li>
+</ul>
 
-def updated() {
-	log.debug "Updated with settings: ${settings}"
-	unsubscribe()
-	initialize()
-}
+<hr />
 
-def initialize() {
-	subscribe(thecontact, "contact.open", doorOpensHandler)
-}
+<h2>SmartApps</h2>
 
-def doorOpensHandler(evt)
-	{
-//	Store lastupdate time from keypad
-//	def lastupdt = thekeypad.currentValue("lastUpdate") deprecated v 1.0.1
-	def alarm = location.currentState("alarmSystemStatus")
-	def alarmstatus = alarm?.value
-	def lastupdt = alarm?.date.time
-	log.debug "doorOpensHandler called: $evt.value $alarmstatus $lastupdt"
+<h3>Smart Home Delay</h3>
+<ul>
+<li>Uses Contact Sensors and Simulated Contact Sensor to create a user controlled entry delay for SmartHome. Optionally it  sounds an entrydelay beep tone on Centrallite / xfinity keypad, and optionally beeps a siren.</li>
+<li><a href="https://github.com/arnbme/SmartThingsPublic/blob/master/smartapps/arnbme/smart-home-delay.src/smart-home-delay.groovy">View Smart Home Delay - SmartApp Code</a></li>
+</ul>
 
-//	alarmstaus values: off, stay, away
-	if (alarmstatus == "stay" || alarmstatus == "away")
-		{
-//		When keypad is defined: Issue an entrydelay for the delay on keypad. Keypad beeps
-		if (settings.thekeypad)
-			{
-			thekeypad.setEntryDelay(thedelay)
-			}
+<hr />
 
-//		when siren is defined: wait 2 seconds allowing people to get through door, then blast a siren warning beep
-		if (settings.thesiren)
-			{
-			thesiren.beep([delay: 2000])
-			}
+<h3>Door Monitor</h3>
 
-//		Trigger Alarm in thedelay seconds by opening the virtual sensor.
-//		Do not delay alarm when additional triggers occur by using overwrite: false
-		runIn(thedelay, soundalarm, [data: [lastupdt: lastupdt], overwrite: false])
-		}
-	}
-
-//	Sound the Alarm. When SmartHome sees simulated sensor change to open, alarm will sound
-def soundalarm(data)
-	{
-	def alarm2 = location.currentState("alarmSystemStatus")
-	def alarmstatus2 = alarm2.value
-	def lastupdt = alarm2.date.time
-//	def lastupdt = thekeypad.currentValue("lastUpdate")
-	log.debug "soundalarm called: $alarmstatus2 $data.lastupdt $lastupdt"
-	if (alarmstatus2=="off")		//This compare is optional, but just incase next test fails
-		{}
-	else
-	if (data.lastupdt==lastupdt)	//if this does not match, the system was set off then rearmed in delay period
-		{
-		log.debug "alarm triggered"
-		thesimcontact.close()		//must use a live simulated sensor or this fails in Simulator
-		thesimcontact.open()
-		thesimcontact.close([delay: 4000])
-		}
-	unschedule()					//kill any lingering tasks caused by using overwrite false on runIn
-	}
+<ul>
+<li>Send a notification to user when non SmartHome monitored contact sensor is open when system is armed</li>
+<li><a href="https://github.com/arnbme/SmartThingsPublic/blob/master/smartapps/arnbme/door-monitor.src/door-monitor.groovy">View Door Monitor - SmartApp Code</a></li>
+</ul>
