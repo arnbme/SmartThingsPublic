@@ -8,8 +8,8 @@ Below you will find a list of the SmartApps that I've created.  I've included a 
 <ul>
 	<li><p><a href="#smartapps">SmartApps</a></p>
 		<ul>
-			<li><a href="#home-presence-manager">Smart Home Delay</a></li>
-			<li><a href="#simple-device-viewer">Door Monitor</a></li>
+			<li><a href="#smart-home-delay">Smart Home Delay</a></li>
+			<li><a href="#door-monitor">Door Monitor</a></li>
 		</ul>
 	</li>
 </ul>
