@@ -20,7 +20,7 @@ Below you will find a list of the SmartApps that I've created.  I've included a 
 
 <h3>Smart Home Delay</h3>
 <ul>
-<li>Uses Contact Sensors and Simulated Contact Sensor to create a user controlled entry delay for SmartHome. Optionally it  sounds an entrydelay beep tone on Centrallite / xfinity keypad, and optionally beeps a siren.</li>
+<li>Uses Contact Sensors and Simulated Contact Sensor to create a user controlled entry delay for SmartHome. Optionally it  sounds an entrydelay beep tone on Centralite / Xfinity keypads, and optionally beeps sirens.</li>
 <li><a href="https://github.com/arnbme/SmartThingsPublic/blob/master/smartapps/arnbme/smart-home-delay.src/smart-home-delay.groovy">View Smart Home Delay - SmartApp Code</a></li>
 </ul>
 
