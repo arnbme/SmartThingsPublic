@@ -1,7 +1,7 @@
 <a name="ReadMeAnchor"></a>
 <h1>Welcome to Arn Burkhoff's SmartThings Repository</h1>
 
-Below you will find a list of the SmartApps that I've created.  I've included a short description of what they can do and included links to their topics in the SmartThings forum.
+Below you will find a list of the SmartApps that I've created.  I've included a short description of what they can do and a link to the source code.
 
 <hr />
 <h2>SmartApps</h2>
