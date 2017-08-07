@@ -4,18 +4,6 @@
 Below you will find a list of the SmartApps that I've created.  I've included a short description of what they can do and included links to their topics in the SmartThings forum.
 
 <hr />
-
-<ul>
-	<li><p><a href="#smartapps">SmartApps</a></p>
-		<ul>
-			<li><a href="#smart-home-delay">Smart Home Delay</a></li>
-			<li><a href="#door-monitor">Door Monitor</a></li>
-		</ul>
-	</li>
-</ul>
-
-<hr />
-
 <h2>SmartApps</h2>
 
 <h3>Smart Home Delay</h3>
