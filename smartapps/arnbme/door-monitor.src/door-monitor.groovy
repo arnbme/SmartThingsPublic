@@ -13,6 +13,7 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *	Aug 08, 2017 v2.0.0a add routine name to unschedule or it kills everything
  *	Aug 08, 2017 v2.0.0  Add subscription to location alarm state and logic to handle it
  *					define and use standard killit and new_monitor routines
  *					remove uneeded timimg stuff due to catching alarm status 
@@ -96,7 +97,7 @@ def killit()
 	{
 	log.debug "killit called"
 	state.remove('cycles')
-	unschedule()	//kill any pending cycles
+	unschedule(checkStatus)	//kill any pending cycles
 	}
 
 //	This is generally when armed and not handled here, could ring a chime or something

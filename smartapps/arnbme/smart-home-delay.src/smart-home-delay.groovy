@@ -12,6 +12,7 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *  Aug 08, 2017 v1.0.4a Unschedule without a routine name is a disaster, add routine name
  *  Aug 08, 2017 v1.0.4 Add subscription to location alarm state and kill when it changes to off
  *  Aug 07, 2017 v1.0.3 Due to reports of RunIn being unreliable, change to RunOnce
  *
@@ -72,7 +73,7 @@ def updated() {
 
 def initialize() {
 	subscribe(location, "alarmSystemStatus", alarmStatusHandler)
-	subscribe(thecontact, "contact.open", doorOpensHandler)
+//	subscribe(thecontact, "contact.open", doorOpensHandler)
 }
 
 def doorOpensHandler(evt)
@@ -113,7 +114,7 @@ def alarmStatusHandler(evt)
 	log.debug("alarmStatusHandler caught alarm status change: ${evt.value}")
 	if (evt.value=="off")
 		{
-		unschedule()		//kill any lingering future tasks
+		unschedule(soundalarm)		//kill any lingering future tasks
 		}
 	}
 
@@ -136,5 +137,5 @@ def soundalarm(data)
 		thesimcontact.open()
 		thesimcontact.close([delay: 4000])
 		}
-	unschedule()					//kill any lingering tasks caused by using overwrite false on runIn
+	unschedule(soundalarm)					//kill any lingering tasks caused by using overwrite false on runIn
 	}
