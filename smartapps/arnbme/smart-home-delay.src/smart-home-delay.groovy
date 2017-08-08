@@ -73,7 +73,7 @@ def updated() {
 
 def initialize() {
 	subscribe(location, "alarmSystemStatus", alarmStatusHandler)
-//	subscribe(thecontact, "contact.open", doorOpensHandler)
+	subscribe(thecontact, "contact.open", doorOpensHandler)
 }
 
 def doorOpensHandler(evt)
