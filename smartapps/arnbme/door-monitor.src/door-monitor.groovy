@@ -13,6 +13,11 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *	Aug 08, 2017 v2.0.0  Add subscription to location alarm state and logic to handle it
+ *					define and use standard killit and new_monitor routines
+ *					remove uneeded timimg stuff due to catching alarm status 
+ *					remove endless cycles when door was open and system unarmed
+ *					unable to push out an error message to user at this time if no push or no sms
  *	Aug 07, 2017 v1.0.2  Due to reports of RunIn being unreliable, change to RunOnce
  *	Aug 05, 2017 v1.0.1b change seconds from 60 to thedelay*60-5 on first short delay eliminating a 5 second runIn
  *	Aug 03, 2017 v1.0.1a Remove extraneous unschedule() from contactOpenHandler.
@@ -36,14 +41,14 @@ preferences {
         input "thedoor", "capability.contactSensor", required: true, title: "Where?"
     }
     section("Maximum number of warning messages") {
-        input "maxcycles", "number", required: true, title: "Maximum Messages?"
+        input "maxcycles", "number", required: true, range: "1..99", default: "2", title: "Maximum Messages?"
     }
     section("Number of minutes between messages") {
-        input "thedelay", "number", required: true
+        input "thedelay", "number", required: true, range: "1..15", default: "1"
     }
 
     section("Send Push Notification?") {
-        input "sendPush", "bool", required: false,
+        input "thesendPush", "bool", required: false, default:false,
               title: "Send Push Notification when Opened?"
     }
     section("Send a text message to this number (optional)") {
@@ -63,28 +68,76 @@ def updated() {
 	initialize()
 }
 
-def initialize() {
-	subscribe(thedoor, "contact.closed", contactClosedHandler)
-	subscribe(thedoor, "contact.open", contactOpenHandler)
-}
-
-def contactOpenHandler(evt)
+def initialize() 
 	{
-	log.debug "contactOpenHandler called: $evt.value cycles: $maxcycles"
-//	runIn (60*thedelay, checkStatus([data: [cycles: maxcycles]])) dont use runs it twice, first is immediate
+//	if (phone || thesendPush)
+//		{
+		subscribe(thedoor, "contact.closed", contactClosedHandler)
+	//	subscribe(thedoor, "contact.open", contactOpenHandler)
+		subscribe(location, 'alarmSystemStatus', alarmStatusHandler)
+//		}
+//	else
+//		{	     
+//		log.error ("A push notification or sms message is required")
+//		}
+	}
+
+	
+def new_monitor()
+	{
+	log.debug "new_monitor called: cycles: $maxcycles"
 	state.cycles = maxcycles
-//	runIn (60*thedelay, checkStatus)
 	def now = new Date()
 	def runTime = new Date(now.getTime() + (thedelay * 60000))
 	runOnce (runTime, checkStatus)
 	}
 
-def contactClosedHandler(evt) {
-	log.debug "contactClosedHandler called: $evt.value"
+def killit()
+	{
+	log.debug "killit called"
 	state.remove('cycles')
 	unschedule()	//kill any pending cycles
 	}
 
+//	This is generally when armed and not handled here, could ring a chime or something
+//	commented out subsribe to contact open above to kill
+def contactOpenHandler(evt)
+	{
+	def alarmstate = location.currentState("alarmSystemStatus")
+	def alarmvalue = alarmstate.value
+	log.debug "contactOpenHandler called: $evt.value alarm: $alarmvalue"
+	if (alarmvalue == "stay" || alarmvalue == "away")
+		{
+		new_monitor()
+		}
+	}	
+
+def contactClosedHandler(evt) {
+	log.debug "contactClosedHandler called: $evt.value"
+	killit()
+	}
+
+def alarmStatusHandler(evt)
+	{
+	log.debug("Door Monitor caught alarm status change: ${evt.value}")
+	if (evt.value=="off")
+		{
+		killit()
+		}
+	else
+		{
+		def contactstate = thedoor.currentState("contact")
+		def contactvalue = contactstate.value
+		if (contactvalue != "open")		//we are done with this
+			{
+			killit()
+			}
+		else
+			{
+			new_monitor()
+			}
+		}
+	}
 
 def checkStatus()
 	{
@@ -110,67 +163,30 @@ def checkStatus()
 //	calc standard next runOnce time
 	def now = new Date()
 	def runTime = new Date(now.getTime() + (thedelay * 60000))
-
-	if (contactvalue != "open")		//we are done with this
+	if (contactvalue == "open" && (alarmvalue == "stay" || alarmvalue == "away"))
 		{
-		unschedule()				//just in case, but should not occur
-		}
-	else
-	if (alarmvalue == "stay" || alarmvalue == "away")
-		{
-//		do nothing process intrusions
-		if (state.cycles == maxcycles && maxcycles > 0 && thedelay > 0 && (thedelay * 60) < alarm_elapsed)
-			{
-			log.debug "check Status: Ignoring intrusion alert"
-			}
-		else
-		if (door_elapsed < (thedelay * 60 - 5) || alarm_elapsed < (thedelay * 60 - 5))	//not worth the few second wait
-			{
-			log.debug ("waiting for delay to elapse before first message")
-			if (door_elapsed < alarm_elapsed)
-				{
-//				runIn(thedelay * 60 - door_elapsed,checkStatus)
-				def now2 = new Date()
-				def runTime2 = new Date(now2.getTime() + ((thedelay * 60000) - (door_elapsed * 1000)))
-				runOnce(runTime2,checkStatus)
-				}
-			else
-				{
-//				runIn(thedelay * 60 - alarm_elapsed,checkStatus)
-				def now2 = new Date()
-				def runTime2 = new Date(now2.getTime() + ((thedelay * 60000) - (alarm_elapsed * 1000)))
-				runOnce(runTime2,checkStatus)
-				}
-			}
-		else
-			{
-			state.cycles = state.cycles - 1
+		state.cycles = state.cycles - 1
 //			state.cycles--  note to self this does not work
 
 //			issue the notification here as specified by user
-			def message = "System is armed, but the ${thedoor.displayName} is open"
-          		if (push)
-          			{
-          			sendPush message
-				}
-			if (phone)
-				{
-	       			sendSms(phone, message)
-	       			}
-			if (thedelay>0 && state.cycles>0)
-				{
-				log.debug ("issued next checkStatus cycle $thedelay ${60*thedelay} seconds")
-//				runIn(60 * thedelay,checkStatus)
-				runOnce(runTime,checkStatus)
-				}
+		def message = "System is armed, but the ${thedoor.displayName} is open"
+		if (thesendPush)
+			{
+			sendPush message
+			}
+		if (phone)
+			{
+			sendSms(phone, message)
+			}
+		if (thedelay>0 && state.cycles>0)
+			{
+			log.debug ("issued next checkStatus cycle $thedelay ${60*thedelay} seconds")
+			runOnce(runTime,checkStatus)
 			}
 		}
 	else
-//		door remains open with alarm status off. Must keep checking incase alarm is set without closing door
 		{
-//		log.debug ("issued next checkStatus with door open and alarm unarmed")
-//		runIn(60 * thedelay,checkStatus)
-		runOnce(runTime,checkStatus)
+		killit()
 		}
 
 	}
