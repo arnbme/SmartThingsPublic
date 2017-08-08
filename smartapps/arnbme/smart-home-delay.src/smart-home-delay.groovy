@@ -12,6 +12,7 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *  Aug 08, 2017 v1.0.4 Add subscription to location alarm state and kill when it changes to off
  *  Aug 07, 2017 v1.0.3 Due to reports of RunIn being unreliable, change to RunOnce
  *
  *  Aug 04, 2017 v1.0.2 Change keypad to an optional device. limit time delay range: 10 to 60 seconds
@@ -70,6 +71,7 @@ def updated() {
 }
 
 def initialize() {
+	subscribe(location, "alarmSystemStatus", alarmStatusHandler)
 	subscribe(thecontact, "contact.open", doorOpensHandler)
 }
 
@@ -105,6 +107,16 @@ def doorOpensHandler(evt)
 		runOnce(runTime, soundalarm, [data: [lastupdt: lastupdt], overwrite: false]) 
 		}
 	}
+
+def alarmStatusHandler(evt)
+	{
+	log.debug("alarmStatusHandler caught alarm status change: ${evt.value}")
+	if (evt.value=="off")
+		{
+		unschedule()		//kill any lingering future tasks
+		}
+	}
+
 
 //	Sound the Alarm. When SmartHome sees simulated sensor change to open, alarm will sound
 def soundalarm(data)
