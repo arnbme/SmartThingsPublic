@@ -13,6 +13,7 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *	Aug 07, 2017 v1.0.2  Due to reports of RunIn being unreliable, change to RunOnce
  *	Aug 05, 2017 v1.0.1b change seconds from 60 to thedelay*60-5 on first short delay eliminating a 5 second runIn
  *	Aug 03, 2017 v1.0.1a Remove extraneous unschedule() from contactOpenHandler.
  *	Aug 02, 2017 v1.0.1  Add logic in checkStatus ignoring instusions (handled by dooropens) as much as possible.
@@ -72,7 +73,10 @@ def contactOpenHandler(evt)
 	log.debug "contactOpenHandler called: $evt.value cycles: $maxcycles"
 //	runIn (60*thedelay, checkStatus([data: [cycles: maxcycles]])) dont use runs it twice, first is immediate
 	state.cycles = maxcycles
-	runIn (60*thedelay, checkStatus)
+//	runIn (60*thedelay, checkStatus)
+	def now = new Date()
+	def runTime = new Date(now.getTime() + (thedelay * 60000))
+	runOnce (runTime, checkStatus)
 	}
 
 def contactClosedHandler(evt) {
@@ -103,6 +107,10 @@ def checkStatus()
 	def door_elapsed = Math.round(door_elapsedk / 1000)	//round back to seconds
 //	log.debug "Door $contactvalue for $door_elapsed seconds"
 
+//	calc standard next runOnce time
+	def now = new Date()
+	def runTime = new Date(now.getTime() + (thedelay * 60000))
+
 	if (contactvalue != "open")		//we are done with this
 		{
 		unschedule()				//just in case, but should not occur
@@ -120,9 +128,19 @@ def checkStatus()
 			{
 			log.debug ("waiting for delay to elapse before first message")
 			if (door_elapsed < alarm_elapsed)
-				runIn(thedelay * 60 - door_elapsed,checkStatus)
+				{
+//				runIn(thedelay * 60 - door_elapsed,checkStatus)
+				def now2 = new Date()
+				def runTime2 = new Date(now2.getTime() + ((thedelay * 60000) - (door_elapsed * 1000)))
+				runOnce(runTime2,checkStatus)
+				}
 			else
-				runIn(thedelay * 60 - alarm_elapsed,checkStatus)
+				{
+//				runIn(thedelay * 60 - alarm_elapsed,checkStatus)
+				def now2 = new Date()
+				def runTime2 = new Date(now2.getTime() + ((thedelay * 60000) - (alarm_elapsed * 1000)))
+				runOnce(runTime2,checkStatus)
+				}
 			}
 		else
 			{
@@ -142,7 +160,8 @@ def checkStatus()
 			if (thedelay>0 && state.cycles>0)
 				{
 				log.debug ("issued next checkStatus cycle $thedelay ${60*thedelay} seconds")
-				runIn(60 * thedelay,checkStatus)
+//				runIn(60 * thedelay,checkStatus)
+				runOnce(runTime,checkStatus)
 				}
 			}
 		}
@@ -150,7 +169,8 @@ def checkStatus()
 //		door remains open with alarm status off. Must keep checking incase alarm is set without closing door
 		{
 //		log.debug ("issued next checkStatus with door open and alarm unarmed")
-		runIn(60 * thedelay,checkStatus)
+//		runIn(60 * thedelay,checkStatus)
+		runOnce(runTime,checkStatus)
 		}
 
 	}
