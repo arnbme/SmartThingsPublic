@@ -1,6 +1,7 @@
 /**
  *  Door Monitor
- *	Issue Warning when door that is not monitored by Smarthome remains open when alarm is set to armed
+ *	Issue Warning when a contact sensor that is not monitored by Smarthome remains open when alarm is set to armed
+ *	Multiple sensors are supported
  *
  *  Copyright 2017 Arn Burkhoff
  *
@@ -13,6 +14,7 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *	Aug 09, 2017 v2.1.0  add support and code for multiple contact monitoring
  *	Aug 08, 2017 v2.0.0a add routine name to unschedule or it kills everything
  *	Aug 08, 2017 v2.0.0  Add subscription to location alarm state and logic to handle it
  *					define and use standard killit and new_monitor routines
@@ -37,26 +39,22 @@ definition(
     iconX3Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png")
 
 
-preferences {
-    section("Door Contact Sensor to Monitor:") {
-        input "thedoor", "capability.contactSensor", required: true, title: "Where?"
-    }
-    section("Maximum number of warning messages") {
-        input "maxcycles", "number", required: true, range: "1..99", default: "2", title: "Maximum Messages?"
-    }
-    section("Number of minutes between messages") {
-        input "thedelay", "number", required: true, range: "1..15", default: "1"
-    }
-
-    section("Send Push Notification?") {
-        input "thesendPush", "bool", required: false, default:false,
-              title: "Send Push Notification when Opened?"
-    }
-    section("Send a text message to this number (optional)") {
-        input "phone", "phone", required: false
-    }
-
-}
+preferences 
+	{
+	section("Monitor Contact Sensors not monitored in SmartHome when alarm is set to armed")
+		{
+		input "thecontact", "capability.contactSensor", required: true, multiple:true,
+			title: "One or more contact sensors"
+		input "maxcycles", "number", required: true, range: "1..99", default: 2, 
+			title: "Maximum number of warning messages. Default:2"
+		input "thedelay", "number", required: true, range: "1..15", default: 1,
+			title: "Number of minutes between messages from 1 to 15, default: 1"  	
+		input "thesendPush", "bool", required: false, default:false,
+			title: "Send Push Notification? Default: false"
+		input "phone", "phone", required: false, 
+			title: "Send a text message to this number, for multiple separate with comma (optional)"
+		}
+	}
 
 def installed() {
 	log.debug "Installed with settings: ${settings}"
@@ -71,16 +69,8 @@ def updated() {
 
 def initialize() 
 	{
-//	if (phone || thesendPush)
-//		{
-		subscribe(thedoor, "contact.closed", contactClosedHandler)
-	//	subscribe(thedoor, "contact.open", contactOpenHandler)
-		subscribe(location, 'alarmSystemStatus', alarmStatusHandler)
-//		}
-//	else
-//		{	     
-//		log.error ("A push notification or sms message is required")
-//		}
+	subscribe(thecontact, "contact.closed", contactClosedHandler)
+	subscribe(location, 'alarmSystemStatus', alarmStatusHandler)
 	}
 
 	
@@ -100,22 +90,23 @@ def killit()
 	unschedule(checkStatus)	//kill any pending cycles
 	}
 
-//	This is generally when armed and not handled here, could ring a chime or something
-//	commented out subsribe to contact open above to kill
-def contactOpenHandler(evt)
-	{
-	def alarmstate = location.currentState("alarmSystemStatus")
-	def alarmvalue = alarmstate.value
-	log.debug "contactOpenHandler called: $evt.value alarm: $alarmvalue"
-	if (alarmvalue == "stay" || alarmvalue == "away")
+def countopenContacts() {
+	log.debug "countopenContacts entered"
+	def curr_contacts = thecontact.currentContact	//status of each contact in a list(array)
+//	count open contacts	
+	def open_contacts = curr_contacts.findAll 
 		{
-		new_monitor()
+		contactVal -> contactVal == "open" ? true : false
 		}
-	}	
+	log.debug "countopenContacts exit with count: ${open_contacts.size()}"
+	return (open_contacts.size())
+	}
 
-def contactClosedHandler(evt) {
+def contactClosedHandler(evt) 
+	{
 	log.debug "contactClosedHandler called: $evt.value"
-	killit()
+	if (countopenContacts()==0)
+		killit()
 	}
 
 def alarmStatusHandler(evt)
@@ -127,9 +118,7 @@ def alarmStatusHandler(evt)
 		}
 	else
 		{
-		def contactstate = thedoor.currentState("contact")
-		def contactvalue = contactstate.value
-		if (contactvalue != "open")		//we are done with this
+		if (countopenContacts()==0)
 			{
 			killit()
 			}
@@ -142,35 +131,47 @@ def alarmStatusHandler(evt)
 
 def checkStatus()
 	{
-	// get the current state object for the contact sensor
-	def contactstate = thedoor.currentState("contact")
-	def contactvalue = contactstate.value
-
 	// get the current state for alarm system
 	def alarmstate = location.currentState("alarmSystemStatus")
 	def alarmvalue = alarmstate.value
 	log.debug "In checkStatus: Alarm: $alarmvalue Door: $contactvalue MessageCycles remaining: $state.cycles"
 
-	// get time elapsed of the current alarm state
-	def alarm_elapsedk = now() - alarmstate.date.time
-	def alarm_elapsed = Math.round(alarm_elapsedk / 1000)	//round back to seconds
-//	log.debug "Alarm $alarmvalue for $alarm_elapsed seconds"
-
-	// get the time elapsed between now and when the door was set open
-	def door_elapsedk = now() - contactstate.date.time
-	def door_elapsed = Math.round(door_elapsedk / 1000)	//round back to seconds
-//	log.debug "Door $contactvalue for $door_elapsed seconds"
-
 //	calc standard next runOnce time
 	def now = new Date()
 	def runTime = new Date(now.getTime() + (thedelay * 60000))
-	if (contactvalue == "open" && (alarmvalue == "stay" || alarmvalue == "away"))
-		{
-		state.cycles = state.cycles - 1
-//			state.cycles--  note to self this does not work
 
-//			issue the notification here as specified by user
-		def message = "System is armed, but the ${thedoor.displayName} is open"
+//	Check if armed and one or more contacts are open
+	def door_count=countopenContacts()		//get open contact count
+	if ((alarmvalue == "stay" || alarmvalue == "away") && door_count>0)
+		{
+		state.cycles = state.cycles - 1	//decrement cycle count
+//		state.cycles--  note to self this does not work
+
+//		get names of open contacts for message
+		def curr_contacts= thecontact.currentContact	//status of each switch in a list(array)
+		def name_contacts= thecontact.displayName		//name of each switch in a list(array)
+		def door_names="";
+		def door_sep="";
+		def ikey=0
+		curr_contacts.each
+			{ value -> 
+			if (value=="open")
+				{
+				door_names+=door_sep+name_contacts[ikey]
+				door_sep=", "
+				}
+			ikey++;
+			}
+		if (door_names>"")
+			{
+			if (door_count > 1)
+				door_names+=" are open"
+			else	
+				door_names+=" is open"
+			}	
+		def message = "System is armed, but doors ${door_names}"
+
+//		send notification and/or SMS message	
 		if (thesendPush)
 			{
 			sendPush message
