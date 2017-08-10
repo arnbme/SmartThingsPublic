@@ -14,6 +14,7 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *	Aug 10, 2017 v2.1.1  fix defaultvalues
  *	Aug 09, 2017 v2.1.0  add support and code for multiple contact monitoring
  *	Aug 08, 2017 v2.0.0a add routine name to unschedule or it kills everything
  *	Aug 08, 2017 v2.0.0  Add subscription to location alarm state and logic to handle it
@@ -45,12 +46,12 @@ preferences
 		{
 		input "thecontact", "capability.contactSensor", required: true, multiple:true,
 			title: "One or more contact sensors"
-		input "maxcycles", "number", required: true, range: "1..99", default: 2, 
-			title: "Maximum number of warning messages. Default:2"
-		input "thedelay", "number", required: true, range: "1..15", default: 1,
-			title: "Number of minutes between messages from 1 to 15, default: 1"  	
-		input "thesendPush", "bool", required: false, default:false,
-			title: "Send Push Notification? Default: false"
+		input "maxcycles", "number", required: true, range: "1..99", defaultValue: 2, 
+			title: "Maximum number of warning messages"
+		input "thedelay", "number", required: true, range: "1..15", defaultValue: 1,
+			title: "Number of minutes between messages from 1 to 15"  	
+		input "thesendPush", "bool", required: false, defaultValue:false,
+			title: "Send Push Notification?"
 		input "phone", "phone", required: false, 
 			title: "Send a text message to this number, for multiple separate with comma (optional)"
 		}
@@ -134,18 +135,19 @@ def checkStatus()
 	// get the current state for alarm system
 	def alarmstate = location.currentState("alarmSystemStatus")
 	def alarmvalue = alarmstate.value
-	log.debug "In checkStatus: Alarm: $alarmvalue Door: $contactvalue MessageCycles remaining: $state.cycles"
+	def door_count=countopenContacts()		//get open contact count
+	log.debug "In checkStatus: Alarm: $alarmvalue Doors Open: ${door_count} MessageCycles remaining: $state.cycles"
 
-//	calc standard next runOnce time
-	def now = new Date()
-	def runTime = new Date(now.getTime() + (thedelay * 60000))
 
 //	Check if armed and one or more contacts are open
-	def door_count=countopenContacts()		//get open contact count
 	if ((alarmvalue == "stay" || alarmvalue == "away") && door_count>0)
 		{
 		state.cycles = state.cycles - 1	//decrement cycle count
 //		state.cycles--  note to self this does not work
+
+//		calc standard next runOnce time
+		def now = new Date()
+		def runTime = new Date(now.getTime() + (thedelay * 60000))
 
 //		get names of open contacts for message
 		def curr_contacts= thecontact.currentContact	//status of each switch in a list(array)
