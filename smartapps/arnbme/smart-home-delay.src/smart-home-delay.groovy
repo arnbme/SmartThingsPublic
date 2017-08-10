@@ -12,6 +12,7 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *  Aug 10, 2017 v1.0.5 Fix defaultValue
  *  Aug 08, 2017 v1.0.4a Unschedule without a routine name is a disaster, add routine name
  *  Aug 08, 2017 v1.0.4 Add subscription to location alarm state and kill when it changes to off
  *  Aug 07, 2017 v1.0.3 Due to reports of RunIn being unreliable, change to RunOnce
@@ -51,7 +52,7 @@ preferences
         	title: "One or more Monitored Contact Sensors, do not monitor in Smarthome"
         input "thesimcontact", "capability.contactSensor", required: true,
         	title: "Simulated Contact Sensor, monitored by SmartHome"
-        input "thedelay", "number", required: true, range: "10..60", default: "25",
+        input "thedelay", "number", required: true, range: "10..60", defaultValue: 30,
         	title: "Alarm delay time in seconds from 10 to 60"
         input "thekeypad", "capability.button", required: false, multiple: true,
         	title: "Zero or more Optional Keypads: sounds entry delay tone "
