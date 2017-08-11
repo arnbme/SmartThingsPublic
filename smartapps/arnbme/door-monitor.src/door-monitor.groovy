@@ -14,6 +14,7 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *	Aug 11, 2017 v2.1.2  change icons to hourglass
  *	Aug 10, 2017 v2.1.1  fix defaultvalues
  *	Aug 09, 2017 v2.1.0  add support and code for multiple contact monitoring
  *	Aug 08, 2017 v2.0.0a add routine name to unschedule or it kills everything
@@ -35,9 +36,9 @@ definition(
     author: "Arn Burkhoff",
     description: "Warn when door than is not monitored by Smarthome remains open when alarm is armed",
     category: "My Apps",
-    iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png",
-    iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png",
-    iconX3Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png")
+    iconUrl: "https://www.arnb.org/IMAGES/hourglass.png",
+    iconX2Url: "https://www.arnb.org/IMAGES/hourglass@2x.png",
+    iconX3Url: "https://www.arnb.org/IMAGES/hourglass@2x.png")
 
 
 preferences 

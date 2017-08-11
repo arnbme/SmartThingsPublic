@@ -12,6 +12,7 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *  Aug 11, 2017 v1.0.6 change icons to hourglass
  *  Aug 10, 2017 v1.0.5 Fix defaultValue
  *  Aug 08, 2017 v1.0.4a Unschedule without a routine name is a disaster, add routine name
  *  Aug 08, 2017 v1.0.4 Add subscription to location alarm state and kill when it changes to off
@@ -40,9 +41,9 @@ definition(
     author: "Arn Burkhoff",
     description: "SmartApp simulating missing entry delay option in SmartHome",
     category: "My Apps",
-    iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png",
-    iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png",
-    iconX3Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png")
+    iconUrl: "https://www.arnb.org/IMAGES/hourglass.png",
+    iconX2Url: "https://www.arnb.org/IMAGES/hourglass@2x.png",
+    iconX3Url: "https://www.arnb.org/IMAGES/hourglass@2x.png")
 
 
 preferences
