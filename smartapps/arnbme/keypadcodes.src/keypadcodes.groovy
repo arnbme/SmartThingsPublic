@@ -28,11 +28,14 @@ preferences {
     section("Keypad to monitor") {
         input "thekeypad", "capability.battery", required: true, title: "Keypad?"
         }
-    section("Keypad to monitor") {
+    section("Living Room Light") {
         input "theLRlight", "capability.switch", required: true, title: "Living Room Light?"
     	}
-    section("Keypad to monitor") {
+    section("Front Door Light") {
         input "theFDlight", "capability.switch", required: true, title: "Front Door Light?"
+    	}
+    section("Garage Door") {
+        input "theGarageDoor", "capability.garageDoorControl", required: true, title: "Garage Door?"
     	}
     }
 
@@ -55,6 +58,8 @@ def initialize() {
 def buttonHandler(evt)
 	{
 	log.debug "buttonHandler $evt $evt.value"
+	def alarm = location.currentState("alarmSystemStatus")
+	def alarmstatus = alarm?.value
 	if (evt.value=="0000")
 		{
 		def status=theLRlight.currentState("switch").value
@@ -79,5 +84,15 @@ def buttonHandler(evt)
 			{
 			theFDlight.on()
 			}
+		}
+	else
+	if (evt.value == "3333" && alarmstatus == "off")
+		{
+		theGarageDoor.open()
+		}
+	else
+	if (evt.value=="4444")
+		{
+		theGarageDoor.close()
 		}
 	}
