@@ -1,0 +1,118 @@
+ /*
+ *  SHM Delay TrueDelay 
+ *  Functions: Create a true delay for SHM by executing a dummy routine that does nothing,
+ 			then a real routine in nn seconds
+ * 
+ *  Copyright 2017 Arn Burkhoff
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License. You may obtain a copy of the License at:
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+ *  for the specific language governing permissions and limitations under the License.
+ *
+ * 	Sep 13, 2017    v0.0.0	create
+ *
+ */
+
+definition(
+    name: "SHM Delay TrueExit",
+    namespace: "arnbme",
+    author: "Arn Burkhoff",
+    description: "Create a real exit delay using Smarthome Routines",
+    category: "My Apps",
+    iconUrl: "https://www.arnb.org/IMAGES/hourglass.png",
+    iconX2Url: "https://www.arnb.org/IMAGES/hourglass@2x.png",
+    iconX3Url: "https://www.arnb.org/IMAGES/hourglass@2x.png")
+
+preferences {
+	page(name: "pageOne")
+}
+
+
+def pageOne(error_msg)
+	{
+	dynamicPage(name: "pageOne", title: "SHM Delay TrueExit", install: true, uninstall: true)
+		{
+		section
+			{
+ 			def actions = location.helloHome?.getPhrases()*.label
+			if (actions) 
+				{
+				actions.sort()
+				input "monitor_routine", "enum", title: "Select a routine to monitor for execution", options: actions
+  				}
+  			}	
+		section 
+			{
+			input "theexitdelay", "number", required: true, range: "10..120", defaultValue: 30,
+				title: "How many seconds to wait when monitored routine executes from 10 to 120"
+			}
+		section
+			{
+ 			def actions = location.helloHome?.getPhrases()*.label
+			if (actions) 
+				{
+				actions.sort()
+				input "execute_routine", "enum", title: "Then execute this routine", options: actions
+  				}
+  			}	
+		}
+	}	
+
+
+def installed() {
+    log.debug "Installed with settings: ${settings}"
+    initialize()
+}
+
+def updated() {
+    log.debug "Updated with settings: ${settings}"
+    unsubscribe()
+    initialize()
+}
+
+def initialize() 
+	{
+	subscribe(location, "routineExecuted", routineHandler)
+	}
+
+
+def routineHandler(evt)
+	{
+//	log.debug "routineExecuted: $evt"
+
+// 	name will be "routineExecuted"
+//	log.debug "evt name: ${evt.name}"
+
+//	 value will be the ID of the SmartApp that created this event
+//	log.debug "evt value: ${evt.value}"
+
+// 	displayName will be the name of the routine
+// 	e.g., "I'm Back!" or "Goodbye!"
+//	log.debug "evt displayName: ${evt.displayName}"
+
+// 	descriptionText will be the name of the routine, followed by the action
+// 	e.g., "I'm Back! was executed" or "Goodbye! was executed"
+//	log.debug "evt descriptionText: ${evt.descriptionText}"
+	if (evt.name == "routineExecuted" && evt.displayName == monitor_routine)
+		{
+		log.debug "triggering a delay routine execute"
+		def now = new Date()
+		def runTime = new Date(now.getTime() + (theexitdelay * 1000))
+		runOnce(runTime, executeRoutine) 
+		}
+	}
+
+def executeRoutine()
+	{
+//	execute the target routine
+	log.debug "firing target routine ${execute_routine}"
+	location.helloHome.execute(execute_routine)
+	}
+
+	
+	
