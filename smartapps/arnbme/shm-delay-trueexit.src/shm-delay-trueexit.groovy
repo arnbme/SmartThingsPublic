@@ -14,6 +14,8 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ * 	Sep 14, 2017    v0.0.1	Add some logic to make it "smarter", selecting routine defaults when possible,
+ * 					and removing monitored routine from execution routines list, execution unchanged
  * 	Sep 13, 2017    v0.0.0	create
  *
  */
@@ -40,10 +42,19 @@ def pageOne(error_msg)
 		section
 			{
  			def actions = location.helloHome?.getPhrases()*.label
+			def set_default=false
 			if (actions) 
 				{
 				actions.sort()
-				input "monitor_routine", "enum", title: "Select a routine to monitor for execution", options: actions
+				actions.each
+					{
+					if (it.matches("(.*)(?i)delay(.*)"))
+						{set_default=it}
+					}
+				if (set_default)
+					{input "monitor_routine", "enum", title: "Select a routine to monitor for execution", options: actions, submitOnChange: true, defaultValue: set_default}
+				else
+					{input "monitor_routine", "enum", title: "Select a routine to monitor for execution", options: actions, submitOnChange: true}
   				}
   			}	
 		section 
@@ -56,9 +67,26 @@ def pageOne(error_msg)
  			def actions = location.helloHome?.getPhrases()*.label
 			if (actions) 
 				{
+				def set_default2=false
 				actions.sort()
-				input "execute_routine", "enum", title: "Then execute this routine", options: actions
-  				}
+//				log.debug "actions ${actions}"
+				def new_actions=[]
+				actions.each		//fails when not defined as multiple contacts
+					{
+//					log.debug "${it.value} ${it} ${monitor_routine}"
+					if (it != monitor_routine)	//if monitor_routine not defined it is set to null for compare
+						{
+						new_actions+=it
+						if (it=="Goodbye!")
+							{set_default2=true}
+						}
+					}
+//				log.debug "default is ${set_default2}"	
+				if (set_default2)
+					{input "execute_routine", "enum", title: "Then execute this routine", options: new_actions, defaultValue: "Goodbye!"}
+				else
+					{input "execute_routine", "enum", title: "Then execute this routine", options: new_actions}
+				}	
   			}	
 		}
 	}	
