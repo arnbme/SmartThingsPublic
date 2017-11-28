@@ -3892,12 +3892,12 @@ def Talk(phrase, customSpeechDevice, resume, evt){
 				def cmd_delay=0
 				def matcher
 				def mask = /(.*)[~]{2}([0-9]{3,5})/
-				def commands = phrase.split("[?&]")
 //				log.debug "${phrase} ${commands} ${commands.length}"
-				if (commands.length < 2 || matcher != phrase =~ mask)
+				if (matcher != phrase =~ mask)
 					{it.speak(phrase)}	
 				else
 					{
+					def commands = phrase.split("[?&]")
 					commands.each
 						{ cmd ->
 						if (cmd<" ")
