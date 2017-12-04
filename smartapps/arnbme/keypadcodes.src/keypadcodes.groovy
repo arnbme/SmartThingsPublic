@@ -12,6 +12,8 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *	Dec 04, 2017 add code supporting LanNouncer TTS Chime and text for exitDelays by subscribing to keypad armMode event.
+ *					other modes and entry delay handled by Big Talker
  */
 definition(
     name: "KeypadCodes",
@@ -37,6 +39,9 @@ preferences {
     section("Garage Door") {
         input "theGarageDoor", "capability.garageDoorControl", required: true, title: "Garage Door?"
     	}
+    section("LanNouncer TTS Device for Exit Delay talk") {
+        input "theTTS", "capability.speechSynthesis", required: true, title: "LanNouncer/DLNA?"
+        }
     }
 
 def installed() {
@@ -53,11 +58,13 @@ def updated() {
 
 def initialize() {
     subscribe (thekeypad, "codeEntered", buttonHandler)
+	if (theTTS)
+	    subscribe (thekeypad, "armMode", EntryDelayHandler)
 	}
 
 def buttonHandler(evt)
 	{
-	log.debug "buttonHandler $evt $evt.value"
+//	log.debug "buttonHandler $evt value: ${evt.value} data: ${evt.data}"
 	def alarm = location.currentState("alarmSystemStatus")
 	def alarmstatus = alarm?.value
 	if (evt.value=="0000")
@@ -96,3 +103,15 @@ def buttonHandler(evt)
 		theGarageDoor.close()
 		}
 	}
+	
+def EntryDelayHandler(evt)
+	{
+//	log.debug("EntryDelay event: ${evt.value}")
+	if (evt.value=="exitDelay")
+		{
+		theTTS.speak("@|ALARM=CHIME")
+        theTTS.speak("The system will arm in. 30 seconds. please leave",[delay: 1500])
+		theTTS.speak("@|ALARM=CHIME", [delay: 6000])
+        }
+	}
+	
