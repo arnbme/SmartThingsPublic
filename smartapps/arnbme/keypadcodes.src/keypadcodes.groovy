@@ -110,8 +110,8 @@ def EntryDelayHandler(evt)
 	if (evt.value=="exitDelay")
 		{
 		theTTS.speak("@|ALARM=CHIME")
-        theTTS.speak("The system will arm in. 30 seconds. please leave",[delay: 1500])
-		theTTS.speak("@|ALARM=CHIME", [delay: 6000])
+        theTTS.speak("Smart Home Monitor is arming in 30 seconds. Please exit the facility",[delay: 1800])
+		theTTS.speak("@|ALARM=CHIME", [delay: 8000])
         }
 	}
 	
