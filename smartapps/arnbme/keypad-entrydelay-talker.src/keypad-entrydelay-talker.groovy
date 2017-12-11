@@ -31,21 +31,17 @@ definition(
 
 
 preferences {
-    section("The Entry Delay Message") {
+    section("The Entry Delay Message Settings") {
 		input "theMsg", "string", required: true, title: "The message", 
 			defaultValue: "Smart Home Monitor is arming in 30 seconds. Please exit the facility"
-		}		
-    section("Keypads to monitor") {
 		input "thekeypads", "capability.button", required: true, multiple: true,
-			title: "Keypads used by SHM Delay"
-        }
-    section("LanNouncer TTS Devices for Exit Delay talk") {
+			title: "Keypads to monitor"
         input "theTTS", "capability.speechSynthesis", required: false, multiple: true,
-        	title: "LanNouncer/DLNA?"
-        }
-    section("Speaker Devices for Exit Delay talk") {
-        input "theSpeakers", "capability.musicPlayer", required: false, multiple: true,
-        	title: "Speakers?"
+        	title: "LanNouncer/DLNA TTS Devices"
+        input "theSpeakers", "capability.audioNotification", required: false, multiple: true,
+        	title: "Speaker Devices?"
+		input "theVolume", "number", required: true, range: "1..100", defaultValue: 40,
+			title: "Speaker Volume Level from 1 to 100"
         }	
     }
 
@@ -79,7 +75,7 @@ def EntryDelayHandler(evt)
         	}
 		if (theSpeakers)
 			{
-        	theSpeakers.speak(theMsg)
+        	theSpeakers.playTextAndResume(theMsg,theVolume)
         	}
         }	
 	}
