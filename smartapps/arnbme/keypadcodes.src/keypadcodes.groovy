@@ -12,6 +12,7 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *  Dec 10, 2017 comment out talker code execution. Released in Keypad_ExitDelay_Talker
  *	Dec 04, 2017 add code supporting LanNouncer TTS Chime and text for exitDelays by subscribing to keypad armMode event.
  *					other modes and entry delay handled by Big Talker
  */
@@ -58,8 +59,8 @@ def updated() {
 
 def initialize() {
     subscribe (thekeypad, "codeEntered", buttonHandler)
-	if (theTTS)
-	    subscribe (thekeypad, "armMode", EntryDelayHandler)
+//	if (theTTS)
+//	    subscribe (thekeypad, "armMode", EntryDelayHandler)
 	}
 
 def buttonHandler(evt)
