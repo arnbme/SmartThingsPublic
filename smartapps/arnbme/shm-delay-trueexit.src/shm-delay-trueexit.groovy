@@ -1,4 +1,4 @@
- /*
+/*
  *  SHM Delay TrueDelay 
  *  Functions: Create a true delay for SHM by executing a dummy routine that does nothing,
  			then a real routine in nn seconds
@@ -13,6 +13,8 @@
  *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
+ *
+ * 	Dec 17, 2017    v1.0.0	Add optional speech at exit delay using code from Keypad_ExitDelay_Talker, 
  *
  * 	Sep 14, 2017    v0.0.1	Add some logic to make it "smarter", selecting routine defaults when possible,
  * 					and removing monitored routine from execution routines list, execution unchanged
@@ -88,6 +90,17 @@ def pageOne(error_msg)
 					{input "execute_routine", "enum", title: "Then execute this routine", options: new_actions}
 				}	
   			}	
+	    section("Optional Speech Settings") {
+			input "theMsg", "string", required: true, title: "The message", 
+				defaultValue: "Smart Home Monitor is arming in 30 seconds. Please exit the facility"
+			input "theTTS", "capability.speechSynthesis", required: false, multiple: true,
+				title: "LanNouncer/DLNA TTS Devices"
+			input "theSpeakers", "capability.audioNotification", required: false, multiple: true,
+				title: "Speaker Devices?"
+			input "theVolume", "number", required: true, range: "1..100", defaultValue: 40,
+				title: "Speaker Volume Level from 1 to 100"
+			}	
+
 		}
 	}	
 
@@ -132,6 +145,16 @@ def routineHandler(evt)
 		def now = new Date()
 		def runTime = new Date(now.getTime() + (theexitdelay * 1000))
 		runOnce(runTime, executeRoutine) 
+		if (theTTS)
+			{
+			theTTS.speak("@|ALARM=CHIME")
+			theTTS.speak(theMsg,[delay: 1800])
+			theTTS.speak("@|ALARM=CHIME", [delay: 8000])
+			}
+		if (theSpeakers)
+			{
+			theSpeakers.playTextAndResume(theMsg,theVolume)
+			}
 		}
 	}
 
@@ -141,6 +164,3 @@ def executeRoutine()
 	log.debug "firing target routine ${execute_routine}"
 	location.helloHome.execute(execute_routine)
 	}
-
-	
-	
