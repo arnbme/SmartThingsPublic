@@ -25,6 +25,7 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *	Mar 10, 2018 add entry delay mesage 
  *	Dec 08, 2017 Create 
  */
 definition(
@@ -40,8 +41,10 @@ definition(
 
 preferences {
     section("The Exit Delay Message Settings") {
-		input "theMsg", "string", required: true, title: "The message", 
+		input "theMsg", "string", required: true, title: "Exit message", 
 			defaultValue: "Smart Home Monitor is arming in 30 seconds. Please exit the facility"
+		input "theEntryMsg", "string", required: false, title: "Entry message", 
+			defaultValue: "Please enter your pin on the keypad"
 		input "thekeypads", "capability.button", required: true, multiple: true,
 			title: "Keypads to monitor"
         input "theTTS", "capability.speechSynthesis", required: false, multiple: true,
@@ -66,13 +69,27 @@ def updated() {
 }
 
 def initialize() {
-	subscribe (thekeypads, "armMode", ExitDelayHandler)
+	subscribe (thekeypads, "armMode", TalkerHandler)
 	}
 
 
-def ExitDelayHandler(evt)
+def TalkerHandler(evt)
 	{
-	log.debug("Keypad_ExitDelay_Talker entered, event: ${evt.value}")
+//	log.debug("TalkerHandler entered, event: ${evt.value}")
+	if (evt.value=="entryDelay" && theEntryMsg>"")
+		{
+		if (theTTS)
+			{
+			theTTS.speak("@|ALARM=CHIME")
+			theTTS.speak(theEntryMsg,[delay: 1800])
+			theTTS.speak("@|ALARM=CHIME", [delay: 5000])
+			}
+		if (theSpeakers)
+			{
+			theSpeakers.playTextAndResume(theEntryMsg,theVolume)
+			}
+		}
+	else
 	if (evt.value=="exitDelay")
 		{
 		if (theTTS)
