@@ -97,11 +97,13 @@ def buttonHandler(evt)
 	if (evt.value == "3333" && alarmstatus == "off")
 		{
 		theGarageDoor.open()
+		GarageOpenTalk()
 		}
 	else
 	if (evt.value=="4444")
 		{
 		theGarageDoor.close()
+		GarageCloseTalk()
 		}
 	}
 	
@@ -114,5 +116,19 @@ def EntryDelayHandler(evt)
         theTTS.speak("Smart Home Monitor is arming in 30 seconds. Please exit the facility",[delay: 1800])
 		theTTS.speak("@|ALARM=CHIME", [delay: 8000])
         }
+	}
+def GarageOpenTalk()
+	{
+//	log.debug("EntryDelay event: ${evt.value}")
+	theTTS.speak("@|ALARM=CHIME")
+    theTTS.speak("Requested Garage Door Open",[delay: 1800])
+	theTTS.speak("@|ALARM=CHIME", [delay: 8000])
+	}
+def GarageCloseTalk()
+	{
+//	log.debug("EntryDelay event: ${evt.value}")
+	theTTS.speak("@|ALARM=CHIME")
+    theTTS.speak("Requested Garage Door Close",[delay: 1800])
+	theTTS.speak("@|ALARM=CHIME", [delay: 8000])
 	}
 	
