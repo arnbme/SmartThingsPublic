@@ -14,8 +14,8 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ * 	Jul 04, 2018    v1.0.2	Change non Lannouner each search to find 
  * 	Jul 03, 2018    v1.0.1	Check for non Lannouner devices and when true eliminate chime command 
- *
  * 	Dec 17, 2017    v1.0.0	Add optional speech at exit delay using code from Keypad_ExitDelay_Talker, 
  *
  * 	Sep 14, 2017    v0.0.1	Add some logic to make it "smarter", selecting routine defaults when possible,
@@ -148,14 +148,19 @@ def routineHandler(evt)
 		def now = new Date()
 		def runTime = new Date(now.getTime() + (theexitdelay * 1000))
 		runOnce(runTime, executeRoutine) 
-		theTTS.each
-			{
-			if (it.typeName != 'LANnouncer Alerter')
-				nonnouncer=true
-			}	
-
 		if (theTTS)
 			{
+			theTTS.find
+				{
+				if (it.typeName != 'LANnouncer Alerter')
+					{
+					nonnouncer=true		
+					return true		//stop searching
+					}
+				else
+					return false
+				}	
+	
 			if (nonnouncer)
 				{
 				theTTS.speak(theMsg)
