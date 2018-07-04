@@ -14,6 +14,8 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ * 	Jul 03, 2018    v1.0.1	Check for non Lannouner devices and when true eliminate chime command 
+ *
  * 	Dec 17, 2017    v1.0.0	Add optional speech at exit delay using code from Keypad_ExitDelay_Talker, 
  *
  * 	Sep 14, 2017    v0.0.1	Add some logic to make it "smarter", selecting routine defaults when possible,
@@ -139,17 +141,31 @@ def routineHandler(evt)
 // 	descriptionText will be the name of the routine, followed by the action
 // 	e.g., "I'm Back! was executed" or "Goodbye! was executed"
 //	log.debug "evt descriptionText: ${evt.descriptionText}"
+	def nonnouncer=false;
 	if (evt.name == "routineExecuted" && evt.displayName == monitor_routine)
 		{
 		log.debug "triggering a delay routine execute"
 		def now = new Date()
 		def runTime = new Date(now.getTime() + (theexitdelay * 1000))
 		runOnce(runTime, executeRoutine) 
+		theTTS.each
+			{
+			if (it.typeName != 'LANnouncer Alerter')
+				nonnouncer=true
+			}	
+
 		if (theTTS)
 			{
-			theTTS.speak("@|ALARM=CHIME")
-			theTTS.speak(theMsg,[delay: 1800])
-			theTTS.speak("@|ALARM=CHIME", [delay: 8000])
+			if (nonnouncer)
+				{
+				theTTS.speak(theMsg)
+				}
+			else
+				{
+				theTTS.speak("@|ALARM=CHIME")
+				theTTS.speak(theMsg,[delay: 1800])
+				theTTS.speak("@|ALARM=CHIME", [delay: 8000])
+				}
 			}
 		if (theSpeakers)
 			{
