@@ -12,6 +12,7 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *  Jul 20, 2018 allow for multiple keypads
  *  Dec 10, 2017 comment out talker code execution. Released in Keypad_ExitDelay_Talker
  *	Dec 04, 2017 add code supporting LanNouncer TTS Chime and text for exitDelays by subscribing to keypad armMode event.
  *					other modes and entry delay handled by Big Talker
@@ -28,8 +29,8 @@ definition(
 
 
 preferences {
-    section("Keypad to monitor") {
-        input "thekeypad", "capability.battery", required: true, title: "Keypad?"
+    section("Keypads to monitor") {
+        input "thekeypad", "device.CentraliteKeypad", required: true, multiple: true, title: "Keypads?"
         }
     section("Living Room Light") {
         input "theLRlight", "capability.switch", required: true, title: "Living Room Light?"
