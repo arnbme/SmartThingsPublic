@@ -12,6 +12,7 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *  Jul 25, 2018 kill 1111 and 0000. use routines in SHM Delay User Profile	
  *  Jul 20, 2018 allow for multiple keypads
  *  Dec 10, 2017 comment out talker code execution. Released in Keypad_ExitDelay_Talker
  *	Dec 04, 2017 add code supporting LanNouncer TTS Chime and text for exitDelays by subscribing to keypad armMode event.
@@ -69,7 +70,7 @@ def buttonHandler(evt)
 //	log.debug "buttonHandler $evt value: ${evt.value} data: ${evt.data}"
 	def alarm = location.currentState("alarmSystemStatus")
 	def alarmstatus = alarm?.value
-	if (evt.value=="0000")
+/*	if (evt.value=="0000")
 		{
 		def status=theLRlight.currentState("switch").value
 		if (status=="on")
@@ -95,7 +96,7 @@ def buttonHandler(evt)
 			}
 		}
 	else
-	if (evt.value == "3333" && alarmstatus == "off")
+*/	if (evt.value == "3333" && alarmstatus == "off")
 		{
 		theGarageDoor.open()
 		GarageOpenTalk()
