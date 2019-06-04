@@ -12,7 +12,10 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
- *  Jul 25, 2018 kill 1111 and 0000. use routines in SHM Delay User Profile	
+ *  May 08, 2019 fix for update DTH needed from undocumented system change killing keypads	
+ *  Mar 23, 2019 change chimes for Fully TTS device, change delay from 1800  to 1000 ms	
+ *  Dec 18, 2018 reinstate keypadcodes, routined wiped by ST, just easier this way	
+ *  Jul 25, 2018 kill 1111 and 0000. use routines in SHM Delay User Profile, exit delay done by SHM Delay	
  *  Jul 20, 2018 allow for multiple keypads
  *  Dec 10, 2017 comment out talker code execution. Released in Keypad_ExitDelay_Talker
  *	Dec 04, 2017 add code supporting LanNouncer TTS Chime and text for exitDelays by subscribing to keypad armMode event.
@@ -62,15 +65,21 @@ def updated() {
 def initialize() {
     subscribe (thekeypad, "codeEntered", buttonHandler)
 //	if (theTTS)
-//	    subscribe (thekeypad, "armMode", EntryDelayHandler)
+//	    subscribe (thekeypad, "armMode", ExitDelayHandler)
 	}
 
 def buttonHandler(evt)
 	{
-//	log.debug "buttonHandler $evt value: ${evt.value} data: ${evt.data}"
+	def thePin=evt.value.substring(0,4) as String
+	def theMode=evt.value.substring(5,6)
+	log.debug "buttonHandler $evt value: $evt.value data: $evt.data thePin:$thePin theMode:$theMode"
+	
+//	log.debug "buttonHandler $evt value: $evt.value data: $evt.data"
+//	def datacodes = new groovy.json.JsonSlurper().parseText(evt.data)
+//	log.debug datacodes.armMode
 	def alarm = location.currentState("alarmSystemStatus")
 	def alarmstatus = alarm?.value
-/*	if (evt.value=="0000")
+	if (thePin=="0000")
 		{
 		def status=theLRlight.currentState("switch").value
 		if (status=="on")
@@ -83,7 +92,7 @@ def buttonHandler(evt)
 			}
 		}
 	else
-	if (evt.value=="1111")
+	if (thePin=="1111")
 		{
 		def status=theFDlight.currentState("switch").value
 		if (status=="on")
@@ -96,41 +105,41 @@ def buttonHandler(evt)
 			}
 		}
 	else
-*/	if (evt.value == "3333" && alarmstatus == "off")
+	if (thePin == "3333" && alarmstatus == "off")
 		{
 		theGarageDoor.open()
 		GarageOpenTalk()
 		}
 	else
-	if (evt.value=="4444")
+	if (thePin=="4444")
 		{
 		theGarageDoor.close()
 		GarageCloseTalk()
 		}
 	}
 	
-def EntryDelayHandler(evt)
+def ExitDelayHandler(evt)
 	{
-//	log.debug("EntryDelay event: ${evt.value}")
+//	log.debug("ExitDelay event: ${evt.value}")
 	if (evt.value=="exitDelay")
 		{
-		theTTS.speak("@|ALARM=CHIME")
-        theTTS.speak("Smart Home Monitor is arming in 30 seconds. Please exit the facility",[delay: 1800])
-		theTTS.speak("@|ALARM=CHIME", [delay: 8000])
+//		theTTS.speak("@|ALARM=CHIME")
+		theTTS.chime()
+        theTTS.speak("Smart Home Monitor is arming in 30 seconds. Please exit the facility",[delay: 1000])
         }
 	}
 def GarageOpenTalk()
 	{
 //	log.debug("EntryDelay event: ${evt.value}")
-	theTTS.speak("@|ALARM=CHIME")
-    theTTS.speak("Requested Garage Door Open",[delay: 1800])
-	theTTS.speak("@|ALARM=CHIME", [delay: 8000])
+//	theTTS.speak("@|ALARM=CHIME")
+	theTTS.chime()
+    theTTS.speak("Requested Garage Door Open",[delay: 1000])
 	}
 def GarageCloseTalk()
 	{
 //	log.debug("EntryDelay event: ${evt.value}")
-	theTTS.speak("@|ALARM=CHIME")
-    theTTS.speak("Requested Garage Door Close",[delay: 1800])
-	theTTS.speak("@|ALARM=CHIME", [delay: 8000])
+//	theTTS.speak("@|ALARM=CHIME")
+	theTTS.chime()
+    theTTS.speak("Requested Garage Door Close",[delay: 1000])
 	}
 	
